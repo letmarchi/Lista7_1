@@ -33,6 +33,23 @@ void **ImprimeMatriz(double **M, int *m, int *n){
   
 }
 
+double *LeVetor(char *nome, int *m){
+  FILE *fp = fopen(nome, "r");
+  int i, j;
+  double *vetor;  
+
+  fscanf(fp, "%d", m);
+   
+  
+  vetor = (double *)malloc( *m*sizeof(double *));
+  
+  for(i=0;i<*m;i++){
+          fscanf(fp, "%lf", &vetor[i]);
+  }
+
+  return vetor;
+}
+
 void SeparaMatriz(double **M, int m, int n, double ***S, double **b)
 {
 		int i, j;
@@ -249,35 +266,26 @@ double Conjugado(double **Matriz, int m, int n, double *x0, double *d, int p){
 
 
 int main() {
-double **MA, **M, *VI, dx, *d, *r, tolerance=1e-8, w;
+double **M, **C,*b ,*v,*d,*l1, dx, tolerance=1e-8;
 int m, n, l, i, it=0, p=0;
 FILE *arq;
 
-MA = LeMatriz("Matrix.dat",&m, &n);
-printf("Matriz Aumentada\n");
-ImprimeMatriz(MA, &m, &n);
-SeparaMatriz(MA, m, n, &M, &VI);
-printf("\nMatriz \n");
-ImprimeMatriz(M, &m, &m);
-printf("\nVetor \n");
-ImprimeVetor(VI, m);
+M = LeMatriz("Matrix.dat",&m, &n);
+printf("Matriz\n");
+ImprimeMatriz(M, &m, &n);
 
-d=r=Residuos(M, m, n, VI);
-{
-  do{
+l1 = (double*)calloc(m,sizeof(double));
+
+d = v;
+it =0;
+printf("\n Método do gradiente conjugado\n");
+do{
   it++;
-  //dx=Jacobi(M, m, n, v, p);
-  //dx=Gauss(M, m, n, v, p);
-  //dx = Relaxacao(M, m, n, VI, w, p);
-  //dx=Gradiente(M, m, n, v, p);
-  dx=Conjugado(M, m, n, VI, d, p);
-  printf("%d %8.4g ", it,dx);
-  for( i=0; i<m; i++) printf("%11.6g ", VI[i]);
+  dx = Conjugado(M,m,n,v,d,p);
+  printf("%d %8.4g", it, dx);
+  for( i=0; i<m; i++) printf("%11.6g ", v[i]);
   puts("");
-  } while (dx > tolerance);
-  
-}
+}while (dx > tolerance);
+
 return 0;
 }
-
-
