@@ -264,5 +264,81 @@ do{
 
 free(l1);
 
+l1 = (double*)calloc(m,sizeof(double));
+
+v = LeVetor("vetor.dat", &l);
+d = v;
+it =0;
+printf("\ngradiente conjugado\n");
+do{
+  it++;
+  dx = Conjugado(M,m,n,v,d,p, l1);
+  printf("It:%d %8.4g\n", it, dx);
+  for( i=0; i<m; i++) printf("%11.6g ", v[i]);
+  puts("");
+}while (dx > tolerance);
+
+free(l1);
+
+v = LeVetor("vetor.dat", &l);
+it =0;
+printf("\nGauss\n");
+do{
+  it++;
+  dx = Gauss(M,m,n,v,p);
+  printf("It:%d %8.4g\n", it, dx);
+  for( i=0; i<m; i++) printf("%11.6g ", v[i]);
+  puts("");
+}while (dx > tolerance);
+
+free(l1);
+
+printf("Letra c");
+
+M = LeMatriz("Matrix1.dat",&m, &n);
+v = LeVetor("vetor.dat", &l);
+
+l1 = (double*)calloc(m,sizeof(double));
+
+printf("\n Maxima descida\n");
+do{
+  it++;
+  dx = MaximaDescida(M,m,n,v,p,l1);
+  printf("It:%d %8.4g\n", it, dx);
+  for( i=0; i<m; i++) printf("%11.6g ", v[i]);
+  puts("");
+}while (dx > tolerance);
+
+free(l1);
+
+l1 = (double*)calloc(m,sizeof(double));
+
+v = LeVetor("vetor.dat", &l);
+d = v;
+it =0;
+printf("\ngradiente conjugado\n");
+do{
+  it++;
+  dx = Conjugado(M,m,n,v,d,p, l1);
+  printf("It:%d %8.4g\n", it, dx);
+  for( i=0; i<m; i++) printf("%11.6g ", v[i]);
+  puts("");
+}while (dx > tolerance);
+
+free(l1);
+
+v = LeVetor("vetor.dat", &l);
+it =0;
+printf("\nGauss\n");
+do{
+  it++;
+  dx = Gauss(M,m,n,v,p);
+  printf("It:%d %8.4g\n", it, dx);
+  for( i=0; i<m; i++) printf("%11.6g ", v[i]);
+  puts("");
+}while (dx > tolerance);
+
+free(l1);
+
 return 0;
 }
