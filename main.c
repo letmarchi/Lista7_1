@@ -33,34 +33,32 @@ void **ImprimeMatriz(double **M, int *m, int *n){
   
 }
 
-void SeparaMatriz(double **MA, int m, int n,double ***MC,double **VI){
-  int i, j;
-  *MC = malloc(m*sizeof(double *));
-  for (i=0;i<m;i++) (*MC)[i]= malloc((m)*sizeof(double));
-  *VI = malloc((m)*sizeof(double));
-  
-  for(i=0;i<m;i++){
-      for(j=0;j<m;j++){
-        (*MC)[i][j] = MA[i][j];
-      }
-      (*VI)[i] = MA[i][n-1];
-  }
-return;  
-}
+void SeparaMatriz(double **M, int m, int n, double ***S, double **b)
+{
+		int i, j;
 
-double *LeVetor(char *nome, int *m){
-  FILE *fp = fopen(nome, "r");
-  int i;
-  double *v;
+	double lvd;
 
-  fscanf(fp, "%d", m);
-  v = (double *) malloc(*m *sizeof(double));
+	*S=malloc (m*sizeof(double *));
+		for (i=0 ; i<m ; i++)
+		{
+			(*S)[i]=malloc(m*sizeof(double));
+		}
+		*b=malloc(m*sizeof(double));
+		for(i=0 ; i< m ; i++)
+		{
+				(*b)[i] = M[i][n-1];
+		}
 
-  for (i=0; i<*m; i++){
-    fscanf(fp, "%lf", &v[i]);
-    puts("");
-  }
-  return v;
+		for(i=0 ; i<m ; i++)
+		 {
+				for( j=0; j<m ; j++)
+				{
+						(*S)[i][j]=M[i][j];
+				}
+		 }
+
+		return;
 }
 
 void ImprimeVetor(double *v, int j){
@@ -181,56 +179,40 @@ double Relaxacao(double **Matriz, int m, int n, double *x0, double omega, int p)
   return NormaVetor(r, m, p);
 }
 
-int main(int argc, char **argv) {
-double **M, *v, dx, tolerance=1e-7, w;
+int main() {
+double **MA, **M, *VI, dx, tolerance=1e-7, w;
 int m, n, l, i, it=0, p=0;
+FILE *arq;
 
-M = LerMatriz(argv[1], &m, &n);
-v = LeVetor(argv[2], &l);
-for( i=0; i<m; i++) printf("%11.6g ", v[i]);
-puts("");
+MA = LeMatriz("Matrix.dat",&m, &n);
+printf("Matriz Aumentada\n");
+ImprimeMatriz(MA, &m, &n);
+SeparaMatriz(MA, m, n, &M, &VI);
+printf("\nMatriz \n");
+ImprimeMatriz(M, &m, &m);
+ImprimeVetor(VI, m);
+//for( i=0; i<m; i++) printf("%11.6g ", VI[i]);
+//puts("");
 
-w=1;
-while(w<2){
-  do{
-  it++;
+//w=1;
+//while(w<2){
+//  do{
+//  it++;
   //dx=Jacobi(M, m, n, v, p);
   //dx=Gauss(M, m, n, v, p);
-  dx = Relaxacao(M, m, n, v, w, p);
+//  dx = Relaxacao(M, m, n, VI, w, p);
   //printf("%d %8.4g ", it,dx);
   //for( i=0; i<m; i++) printf("%11.6g ", v[i]);
   //puts("");
-  } while (dx > tolerance);
-  printf("%d %8.4g %lf ", it,dx,w);
-  for( i=0; i<m; i++) printf("%11.6g ", v[i]);
-  puts("");
-  it=0;
-  for( i=0; i<m; i++) v[i]=0;
-  w+=0.1;
-}
+//  } while (dx > tolerance);
+//  printf("%d %8.4g %lf ", it,dx,w);
+//  for( i=0; i<m; i++) printf("%11.6g ", VI[i]);
+//  puts("");
+//  it=0;
+//  for( i=0; i<m; i++) VI[i]=0;
+//  w+=0.1;
+//}
 return 0;
 }
 
-int main() {
-  double **MA, **M, *VI, **L, **U, *R;
-  int i, j, n, m;
-  FILE *arq;
-  
-  MA = LeMatriz("Matrix.dat",&m, &n);
-  printf("Matriz Original\n");
-  ImprimeMatriz(MA, &m, &n);
-  SeparaMatriz(MA, m, n, &M, &VI);
-  printf("Matriz Separada\n");
-  ImprimeMatriz(M, &m, &n);
-  printf ("Termos independentes\n");
-	for (i=0; i<m; i++)
-	{
-			printf ("ba[%d] = %g\t", i, VI[i]);
-	}
-  //ImprimeVetor(VI, m);
-  //LUPivot(M, &L, &U, &VI, m, n);
-  printf("Matriz pivotada\n");
-  ImprimeMatriz(M, &m, &n);
-  return 0;
-}
 
