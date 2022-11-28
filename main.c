@@ -118,6 +118,41 @@ double NormaVetor(double *v, int m, int p){
   return max;
 }
 
+double *MultiVetMat(double **M, double *x, int m, int n){
+  int i, j, k;
+  double *r;
+
+  r=malloc(m*sizeof(double *));
+
+  for(i=0; i<m; i++){
+    for(j=0; j<m; j++){
+      r[i]+=M[i][j]*x[j];
+    }
+  }
+  return r;
+}
+
+double MultVetor(double *x, double *y, int t){
+  int i;
+  double l=0;
+  for(i=0;i<t;i++){
+    l+=x[i]*y[i];
+  }
+  return l;
+}
+
+double *Residuos(double **M, int m, int n, double *x){
+  int i;
+  double *r,*s;
+
+  r=malloc(m*sizeof(double *));
+  s=MultiVetMat(M, x, m, n);
+  for(i=0;i<m;i++)
+    r[i]=M[i][n-1]-s[i];
+
+  return r;
+}
+
 double Jacobi(double **Matriz, int m, int n, double *x0, int p){
   int i,j;
   double sum, *v, *r;
@@ -179,8 +214,42 @@ double Relaxacao(double **Matriz, int m, int n, double *x0, double omega, int p)
   return NormaVetor(r, m, p);
 }
 
+double Gradiente(double **Matriz, int m, int n, double *x0, int p){
+  int i,j;
+  double sum, lambda, *r;
+
+  r=(double *) malloc(m *sizeof(double));
+  r=Residuos(Matriz, m, n, x0);
+  lambda=MultVetor(r,r,m)/MultVetor(r, MultiVetMat(Matriz, r, m, n), m);
+  for(i=0;i<m;i++)
+    x0[i]+=lambda*r[i];
+  return NormaVetor(r, m, p);
+}
+
+double Conjugado(double **Matriz, int m, int n, double *x0, double *d, int p){
+  int i,j;
+  double a, *Ad, rr, *r, B, *r1;
+
+  r=r1=(double *) malloc(m *sizeof(double));
+  r=r1=Residuos(Matriz, m, n, x0); 
+  Ad=MultiVetMat(Matriz, d, m, n);
+  rr=MultVetor(r,r,m);
+  a=rr/MultVetor(d, Ad, m);
+  
+  for(i=0;i<m;i++){
+    x0[i]+=a*d[i];
+    r[i]-=a*Ad[i];
+  }
+  B=MultVetor(r,r,m)/rr;
+  for(i=0;i<m;i++){
+    d[i]=r[i]+B*d[i];
+  }
+  return NormaVetor(r, m, p);
+}
+
+
 int main() {
-double **MA, **M, *VI, dx, tolerance=1e-8, w;
+double **MA, **M, *VI, dx, *d, *r, tolerance=1e-8, w;
 int m, n, l, i, it=0, p=0;
 FILE *arq;
 
@@ -193,23 +262,20 @@ ImprimeMatriz(M, &m, &m);
 printf("\nVetor \n");
 ImprimeVetor(VI, m);
 
-w=1;
-while(w<2){
+d=r=Residuos(M, m, n, VI);
+{
   do{
   it++;
   //dx=Jacobi(M, m, n, v, p);
   //dx=Gauss(M, m, n, v, p);
-  dx = Relaxacao(M, m, n, VI, w, p);
-  //printf("%d %8.4g ", it,dx);
-  //for( i=0; i<m; i++) printf("%11.6g ", v[i]);
-  //puts("");
-  } while (dx > tolerance);
-  printf("%d %8.4g %lf ", it,dx,w);
-  for( i=0; i<m; i++) ImprimeVetor(VI, m);
+  //dx = Relaxacao(M, m, n, VI, w, p);
+  //dx=Gradiente(M, m, n, v, p);
+  dx=Conjugado(M, m, n, VI, d, p);
+  printf("%d %8.4g ", it,dx);
+  for( i=0; i<m; i++) printf("%11.6g ", VI[i]);
   puts("");
-  it=0;
-  for( i=0; i<m; i++) VI[i]=0;
-  w+=0.1;
+  } while (dx > tolerance);
+  
 }
 return 0;
 }
