@@ -180,7 +180,7 @@ double Relaxacao(double **Matriz, int m, int n, double *x0, double omega, int p)
 }
 
 int main() {
-double **MA, **M, *VI, dx, tolerance=1e-7, w;
+double **MA, **M, *VI, dx, tolerance=1e-8, w;
 int m, n, l, i, it=0, p=0;
 FILE *arq;
 
@@ -190,28 +190,27 @@ ImprimeMatriz(MA, &m, &n);
 SeparaMatriz(MA, m, n, &M, &VI);
 printf("\nMatriz \n");
 ImprimeMatriz(M, &m, &m);
+printf("\nVetor \n");
 ImprimeVetor(VI, m);
-//for( i=0; i<m; i++) printf("%11.6g ", VI[i]);
-//puts("");
 
-//w=1;
-//while(w<2){
-//  do{
-//  it++;
+w=1;
+while(w<2){
+  do{
+  it++;
   //dx=Jacobi(M, m, n, v, p);
   //dx=Gauss(M, m, n, v, p);
-//  dx = Relaxacao(M, m, n, VI, w, p);
+  dx = Relaxacao(M, m, n, VI, w, p);
   //printf("%d %8.4g ", it,dx);
   //for( i=0; i<m; i++) printf("%11.6g ", v[i]);
   //puts("");
-//  } while (dx > tolerance);
-//  printf("%d %8.4g %lf ", it,dx,w);
-//  for( i=0; i<m; i++) printf("%11.6g ", VI[i]);
-//  puts("");
-//  it=0;
-//  for( i=0; i<m; i++) VI[i]=0;
-//  w+=0.1;
-//}
+  } while (dx > tolerance);
+  printf("%d %8.4g %lf ", it,dx,w);
+  for( i=0; i<m; i++) ImprimeVetor(VI, m);
+  puts("");
+  it=0;
+  for( i=0; i<m; i++) VI[i]=0;
+  w+=0.1;
+}
 return 0;
 }
 
