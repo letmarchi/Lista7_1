@@ -50,33 +50,6 @@ double *LeVetor(char *nome, int *m){
   return vetor;
 }
 
-void SeparaMatriz(double **M, int m, int n, double ***S, double **b)
-{
-		int i, j;
-
-	double lvd;
-
-	*S=malloc (m*sizeof(double *));
-		for (i=0 ; i<m ; i++)
-		{
-			(*S)[i]=malloc(m*sizeof(double));
-		}
-		*b=malloc(m*sizeof(double));
-		for(i=0 ; i< m ; i++)
-		{
-				(*b)[i] = M[i][n-1];
-		}
-
-		for(i=0 ; i<m ; i++)
-		 {
-				for( j=0; j<m ; j++)
-				{
-						(*S)[i][j]=M[i][j];
-				}
-		 }
-
-		return;
-}
 
 void ImprimeVetor(double *v, int j){
   int i;
@@ -170,26 +143,6 @@ double *Residuos(double **M, int m, int n, double *x){
   return r;
 }
 
-double Jacobi(double **Matriz, int m, int n, double *x0, int p){
-  int i,j;
-  double sum, *v, *r;
-
-  v = (double *) malloc(m *sizeof(double));
-
-  for(i=0;i<m;i++){
-    sum=0;
-    for(j=0;j<n-1;j++){
-      if(i!=j) sum+=Matriz[i][j]*x0[j];
-    }
-    v[i]=(Matriz[i][n-1]-sum)/Matriz[i][i];
-  }
-  r = (double *) malloc(m *sizeof(double));
-  for(i=0;i<m;i++){
-    r[i]=x0[i]-v[i];
-  }
-  memcpy(x0, v, m*sizeof(double));
-  return NormaVetor(r, m, p);
-}
 
 double Gauss(double **Matriz, int m, int n, double *x0, int p){
   int i,j;
@@ -211,57 +164,82 @@ double Gauss(double **Matriz, int m, int n, double *x0, int p){
   return NormaVetor(r, m, p);
 }
 
-double Relaxacao(double **Matriz, int m, int n, double *x0, double omega, int p){
+
+double Conjugado(double **M, int m, int n, double *x0, double *d, int p, double *l1){
   int i,j;
-  double sum, *v, *r;
+  double *r, a, b, *aux, *aux1, ort;
+   
+  r = (double *)malloc(m*sizeof(double));
+  aux = (double *)malloc(m*sizeof(double));
+ 
+  aux1 = (double *)malloc(m*sizeof(double));
 
-  v = (double *) malloc(m *sizeof(double));
-  memcpy(v, x0, m*sizeof(double));
-  for(i=0;i<m;i++){
-    sum=0;
-    for(j=0;j<n-1;j++){
-      if(i!=j) sum+=Matriz[i][j]*x0[j];
-    }
-    x0[i]=((1-omega)*x0[i]) + omega*(Matriz[i][n-1]-sum)/Matriz[i][i];
-  }
-  r = (double *) malloc(m *sizeof(double));
-  for(i=0;i<m;i++){
-    r[i]=x0[i]-v[i];
-  }
-  return NormaVetor(r, m, p);
-}
-
-double Gradiente(double **Matriz, int m, int n, double *x0, int p){
-  int i,j;
-  double sum, lambda, *r;
-
-  r=(double *) malloc(m *sizeof(double));
-  r=Residuos(Matriz, m, n, x0);
-  lambda=MultVetor(r,r,m)/MultVetor(r, MultiVetMat(Matriz, r, m, n), m);
-  for(i=0;i<m;i++)
-    x0[i]+=lambda*r[i];
-  return NormaVetor(r, m, p);
-}
-
-double Conjugado(double **Matriz, int m, int n, double *x0, double *d, int p){
-  int i,j;
-  double a, *Ad, rr, *r, B, *r1;
-
-  r=r1=(double *) malloc(m *sizeof(double));
-  r=r1=Residuos(Matriz, m, n, x0); 
-  Ad=MultiVetMat(Matriz, d, m, n);
-  rr=MultVetor(r,r,m);
-  a=rr/MultVetor(d, Ad, m);
   
+  r = Residuos(M, m, n, x0);
+
+	for(i=0;i<m;i++){
+		for(j=0;j<m;j++){
+			if(i==j){
+				ort = r[i]*l1[j] + ort;
+			} 
+
+		}
+	}
+
+  d = Residuos(M, m, n, x0);
+
+  aux1 = r;
+
+  a = (MultVetor(r,r,m))/(MultVetor(r,MultiVetMat(M, r, m, n),m));
+
+  for(i=0;i<m;i++) x0[i] = x0[i] + a*d[i];
+  
+  aux = MultiVetMat(M, d, m, n);
+
+  l1 =r;
+	if(ort == 0){
+		printf("Os residuos sao ortogonais\n");
+	}
+
+  for(i=0;i<m;i++) r[i] = r[i] - a*aux[i];
+
+  b = (MultVetor(r,r,m))/(MultVetor(aux1,aux1,m));
+
+  for(i=0;i<m;i++) d[i] = d[i] + b*d[i];
+
+  return(NormaVetor(r, m, p));
+}
+
+double MaximaDescida(double **M, int m, int n, double *x0, int p, double *l1){
+
+  double *lt, *t, lambda, ort=0;
+  
+  int i,j;
+
+  t = (double *)malloc(m*sizeof(double));
+  
+  t = Residuos(M, m, n,x0);
+
   for(i=0;i<m;i++){
-    x0[i]+=a*d[i];
-    r[i]-=a*Ad[i];
-  }
-  B=MultVetor(r,r,m)/rr;
-  for(i=0;i<m;i++){
-    d[i]=r[i]+B*d[i];
-  }
-  return NormaVetor(r, m, p);
+		for(j=0;j<m;j++){
+			if(i==j){
+				ort = t[i]*l1[j] + ort;
+			} 
+
+		}
+	}
+
+  lambda=  (MultVetor(t,t,m))/(MultVetor(t,MultiVetMat(M, t, m, n),m));
+
+  l1 =t;
+
+  for(i=0;i<m;i++) x0[i]+=lambda*t[i];
+
+	if(ort == 0){
+		printf("Os residuos sao ortogonais\n");
+	}
+
+  return(NormaVetor(t, m, p));
 }
 
 
@@ -271,21 +249,20 @@ int m, n, l, i, it=0, p=0;
 FILE *arq;
 
 M = LeMatriz("Matrix.dat",&m, &n);
-printf("Matriz\n");
-ImprimeMatriz(M, &m, &n);
+v = LeVetor("vetor.dat", &l);
 
 l1 = (double*)calloc(m,sizeof(double));
 
-d = v;
-it =0;
-printf("\n Método do gradiente conjugado\n");
+printf("\n Maxima descida\n");
 do{
   it++;
-  dx = Conjugado(M,m,n,v,d,p);
-  printf("%d %8.4g", it, dx);
+  dx = MaximaDescida(M,m,n,v,p,l1);
+  printf("It:%d %8.4g\n", it, dx);
   for( i=0; i<m; i++) printf("%11.6g ", v[i]);
   puts("");
 }while (dx > tolerance);
+
+free(l1);
 
 return 0;
 }
